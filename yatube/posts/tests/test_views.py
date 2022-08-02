@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Page
 from ..forms import PostForm
 from ..models import Post, Group
+from django.core.cache import cache
 
 
 User = get_user_model()
@@ -28,6 +29,9 @@ class PostsPagesTests(TestCase):
             group_id=cls.group.id,
             text='test post' + str(x)
         )) for x in range(1, 14)])
+
+    def setUp(self):
+        cache.clear()
 
     def no_same_posts(cls, page1, page2):
         result = True

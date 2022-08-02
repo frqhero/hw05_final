@@ -66,7 +66,7 @@ def post_detail(request, post_id):
     comments = post.comments.all()
     context = {
         'post': post,
-        'form': CommentForm,
+        'form': CommentForm(),
         'comments': comments,
     }
     return render(request, 'posts/post_detail.html', context)

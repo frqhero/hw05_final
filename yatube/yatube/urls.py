@@ -27,7 +27,7 @@ urlpatterns = [
 
 handler404 = 'core.views.page_not_found'
 handler500 = 'core.views.page_500'
-handler403 = 'hi'
+handler403 = 'core.views.page_403'
 
 if settings.DEBUG:
     urlpatterns += static(
