@@ -5,6 +5,9 @@ from django.core.paginator import Page
 from ..forms import PostForm
 from ..models import Post, Group
 from django.core.cache import cache
+import shutil
+import tempfile
+from django.conf import settings
 
 
 User = get_user_model()
@@ -153,3 +156,38 @@ class PostsPagesTests(TestCase):
             with self.subTest(destination=destination):
                 response = self.guest_client.get(destination)
                 self.assertEqual(response.context['page_obj'][0].id, 777)
+
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
+
+class CacheWorkingTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='pushkin')
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
+    def setUp(self):
+        self.guest_client = Client()
+
+    def test_cash_works(self):
+        response = self.guest_client.get(reverse('posts:index'))
+        calculated_content = response.content
+
+        Post.objects.create(
+            text='whatever',
+            author=self.user,
+        )
+        response = self.guest_client.get(reverse('posts:index'))
+        self.assertEqual(calculated_content, response.content)
+        self.assertIsNone(response.context)
+
+        cache.clear()
+        response = self.guest_client.get(reverse('posts:index'))
+        self.assertNotEqual(calculated_content, response.content)
+        self.assertIsNotNone(response.context)

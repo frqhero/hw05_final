@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from posts.models import Group, Post
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -25,6 +26,7 @@ class TaskURLTests(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_guest_client_200_and_correct_template(self):
         """Проверка доступа и шаблона для страниц (неавторизованно)"""
@@ -69,3 +71,13 @@ class TaskURLTests(TestCase):
         """Гость получает редирект при попытке создания поста."""
         response = self.guest_client.get('/create/')
         self.assertRedirects(response, '/auth/login/?next=/create/')
+
+
+class CustomPageTest(TestCase):
+    def setUp(self):
+        self.guest_client = Client()
+
+    def test_404_returns_custom_template(self):
+        response = self.guest_client.get('/non_existed_page/')
+        template = 'core/404.html'
+        self.assertTemplateUsed(response, template)
