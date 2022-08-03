@@ -1,14 +1,15 @@
-from django.test import Client, TestCase
-from django.urls import reverse
-from django.contrib.auth import get_user_model
-from django.core.paginator import Page
-from ..forms import PostForm
-from ..models import Post, Group
-from django.core.cache import cache
 import shutil
 import tempfile
-from django.conf import settings
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.core.paginator import Page
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..forms import PostForm
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -26,12 +27,13 @@ class PostsPagesTests(TestCase):
             description='Тестовый текст',
             slug='test-slug'
         )
-        Post.objects.bulk_create([(Post(
+        new_posts_list = [(Post(
             author_id=cls.user.id,
             id=x,
             group_id=cls.group.id,
             text='test post' + str(x)
-        )) for x in range(1, 14)])
+        )) for x in range(1, 14)]
+        Post.objects.bulk_create(new_posts_list)
 
     def setUp(self):
         cache.clear()

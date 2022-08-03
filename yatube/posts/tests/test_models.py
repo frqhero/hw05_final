@@ -1,12 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-
-from posts.models import Group, Post, Follow
 import shutil
-from django.urls import reverse
 import tempfile
+
 from django.conf import settings
-from django.test import Client
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+from posts.models import Follow, Group, Post
 
 User = get_user_model()
 

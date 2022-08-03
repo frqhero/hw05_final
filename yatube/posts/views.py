@@ -1,23 +1,24 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Follow, Post, Group, User
 from django.core.paginator import Paginator
-from posts.forms import PostForm, CommentForm
-from django.views.decorators.cache import cache_page
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.cache import cache_page
+from posts.forms import CommentForm, PostForm
+
+from .models import Follow, Group, Post, User
 
 
-def to_paginate(p_iterable, page_number, posts_a_page=10):
+def to_paginate(p_iterable, request, posts_a_page=10):
+    """Paginates by extracting a page number from the request."""
     paginator = Paginator(p_iterable, posts_a_page)
-    return paginator.get_page(page_number)
+    return paginator.get_page(request.GET.get('page'))
 
 
 @cache_page(20, key_prefix='index_page')
 def index(request):
     posts_list = Post.objects.all()
-    page_num_from_url = request.GET.get('page')
 
-    page_obj = to_paginate(posts_list, page_num_from_url)
+    page_obj = to_paginate(posts_list, request)
 
     context = {
         'page_obj': page_obj,
@@ -28,9 +29,8 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     post_lists = group.posts.all()
-    page_num_from_url = request.GET.get('page')
 
-    page_obj = to_paginate(post_lists, page_num_from_url)
+    page_obj = to_paginate(post_lists, request)
 
     context = {
         'group': group,
@@ -42,9 +42,8 @@ def group_posts(request, slug):
 def profile(request, username):
     user = get_object_or_404(User, username=username)
     post_list = user.posts.select_related('group').all()
-    page_num_from_url = request.GET.get('page')
 
-    page_obj = to_paginate(post_list, page_num_from_url)
+    page_obj = to_paginate(post_list, request)
 
     following = False
     if request.user.is_authenticated:
@@ -52,7 +51,7 @@ def profile(request, username):
             user=request.user,
             author=user,
         ).exists()
-
+    # не получается, тесты падают (pytest)
     context = {
         'author': user,
         'page_obj': page_obj,
@@ -133,9 +132,8 @@ def follow_index(request):
     favs = Follow.objects.filter(user=request.user).select_related('author')
     favs = [entry.author for entry in favs]
     posts_list = Post.objects.filter(author__in=favs)
-    page_num_from_url = request.GET.get('page')
 
-    page_obj = to_paginate(posts_list, page_num_from_url)
+    page_obj = to_paginate(posts_list, request)
 
     context = {
         'page_obj': page_obj,
